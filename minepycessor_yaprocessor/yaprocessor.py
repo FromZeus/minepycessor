@@ -72,7 +72,7 @@ class YaProcessor(object):
         push.parse()
         push.verify(self.conf["push_secret"])
         push.get_details(self.token)
-        log.info("###################\n{}\n###################".format(push))
+        log.info("\n###################\n{}\n###################".format(push))
 
         if "message" in push:
             target, nickname = self.parse_message(push["message"])
