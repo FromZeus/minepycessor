@@ -68,6 +68,8 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         log.debug("Body:\n{}".format(body))
         self.wfile.write(response.getvalue())
         try:
+            self.qbus.disconnect()
+            self.qbus.connect()
             self.qbus.put_push(body, self.conf["mqueue"]["queue"])
         except:
             log.error("Can't parse push \n{}".format(
