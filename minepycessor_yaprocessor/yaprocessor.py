@@ -53,6 +53,16 @@ class YaProcessor(object):
 
     def perform_command(self, nickname, target):
         try:
+            log.debug(
+                "Command performing.\nTarget: {}\n"
+                "Nickname: {}\nScreen: {}\nCommand: {}".
+                format(
+                    target,
+                    nickname,
+                    self.conf["screen_name"],
+                    self.conf["menu"][target]["command"]
+                )
+            )
             subprocess.call(
                 [
                     "screen", "-x", self.conf["screen_name"],
