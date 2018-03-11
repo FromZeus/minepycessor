@@ -1,6 +1,5 @@
 from collections import MutableMapping
 import logging
-import traceback
 import hashlib
 import urllib
 
@@ -10,7 +9,7 @@ import requests
 
 
 class YaPush(MutableMapping, object):
-    def __init__(self, message, loglevel="DEBUG", filelog=None):
+    def __init__(self, message, loglevel="INFO", logfile=None):
         self.message = message
         self._parsed = {}
         self._verified = None
@@ -18,9 +17,9 @@ class YaPush(MutableMapping, object):
         global log
 
         if "log" not in globals():
-            if filelog is not None:
+            if logfile is not None:
                 log = logging.getLogger(__name__)
-                log.addHandler(logger.FileHandler(filelog))
+                log.addHandler(logger.FileHandler(logfile))
                 log.setLevel(getattr(logging, loglevel))
             else:
                 log = logging.getLogger(__name__)
@@ -53,7 +52,8 @@ class YaPush(MutableMapping, object):
         return "{}".format(self._parsed)
 
     def from_str(self, push_str):
-        return self._parsed = eval(push_str)
+        self._parsed = eval(push_str)
+        return self._parsed
 
     @property
     def verified(self):
@@ -79,8 +79,10 @@ class YaPush(MutableMapping, object):
     def parsed(self):
         del self._parsed
 
-    def parse(self, message):
-        smessage = message.split("&")
+    def parse(self, message=None):
+        if message is not None:
+            self.message = message
+        smessage = self.message.split("&")
         result = {}
 
         for el in smessage:
@@ -92,11 +94,13 @@ class YaPush(MutableMapping, object):
         return self._parsed
 
     def verify(self, push_secret):
-        params = [self._parsed["notification_type"],
+        params = [
+            self._parsed["notification_type"],
             self._parsed["operation_id"], self._parsed["amount"],
             self._parsed["currency"], self._parsed["datetime"],
             self._parsed["sender"], self._parsed["codepro"],
-            push_secret, self._parsed["label"]]
+            push_secret, self._parsed["label"]
+        ]
 
         if "unaccepted" in self._parsed and \
                 self._parsed["unaccepted"] == "true":
@@ -106,7 +110,7 @@ class YaPush(MutableMapping, object):
 
         check_str = "&".join(params)
         check_str = urllib.unquote_plus(check_str).decode("utf8")
-        log.info("Check string: {}".format(check_str))
+        log.debug("Check string: {}".format(check_str))
         check_sum = hashlib.sha1(check_str).hexdigest()
 
         if check_sum == self._parsed["sha1_hash"]:

@@ -11,9 +11,9 @@ import yaml
 
 from io import BytesIO
 
-from auth import YaAuth
-from bus import QueueBus, DBBus
-import logger
+from minepycessor_libs import YaAuth
+from minepycessor_libs import QueueBus, DBBus
+from minepycessor_libs import logger
 
 
 class AuthServer:
@@ -48,9 +48,9 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             try:
                 token = self.auth.get_token(qs["code"])
                 self.dbus.put_token(
-                    conf["database"]["token_name"],
+                    self.conf["database"]["token_name"],
                     token,
-                    conf["database"]["token_table"]
+                    self.conf["database"]["token_table"]
                 )
             except:
                 log.error("Can't get access token/n{}".format(
@@ -68,7 +68,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         log.debug("Body:\n{}".format(body))
         self.wfile.write(response.getvalue())
         try:
-            self.qbus.put_push(body, conf["mqueue"]["queue"])
+            self.qbus.put_push(body, self.conf["mqueue"]["queue"])
         except:
             log.error("Can't parse push \n{}".format(
                 traceback.format_exc()))
@@ -137,6 +137,10 @@ def main():
             conf["screen_name"] = args.screen_name
         if args.loglevel is not None:
             conf["loglevel"] = args.loglevel
+        if args.log is not None:
+            conf["logfile"] = args.log
+        if conf["logfile"] == "":
+            conf["logfile"] = None
 
         global log
 
@@ -154,22 +158,29 @@ def main():
             conf["client_id"],
             conf["client_secret"],
             conf["push_secret"],
-            scope=conf["scope"]
+            scope=conf["scope"],
+            loglevel=conf["loglevel"],
+            logfile=conf["logfile"]
         )
         auth.get_auth_url()
         qbus = QueueBus(
             conf["mqueue"]["host"],
             conf["mqueue"]["user"],
-            conf["mqueue"]["password"]
+            conf["mqueue"]["password"],
+            loglevel=conf["loglevel"],
+            logfile=conf["logfile"]
         )
         qbus.connect()
         dbus = DBBus(
             conf["database"]["host"],
             conf["database"]["user"],
             conf["database"]["password"],
-            conf["database"]["db"]
+            conf["database"]["db"],
+            loglevel=conf["loglevel"],
+            logfile=conf["logfile"]
         )
         dbus.connect()
+        dbus.create_token_table(conf["database"]["token_table"])
 
         httpd = AuthServer(auth, qbus, dbus, conf)
 

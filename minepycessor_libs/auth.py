@@ -11,7 +11,7 @@ class YaAuth(object):
     def __init__(self, redirect_url, client_id, client_secret,
                  push_secret, scope=["operation-details"],
                  base_url="https://sp-money.yandex.ru/oauth",
-                 loglevel="DEBUG", filelog=None):
+                 loglevel="INFO", logfile=None):
         self.base_url = base_url
         self.redirect_url = redirect_url
         self.client_id = client_id
@@ -22,9 +22,9 @@ class YaAuth(object):
         global log
 
         if "log" not in globals():
-            if filelog is not None:
+            if logfile is not None:
                 log = logging.getLogger(__name__)
-                log.addHandler(logger.FileHandler(filelog))
+                log.addHandler(logger.FileHandler(logfile))
                 log.setLevel(getattr(logging, loglevel))
             else:
                 log = logging.getLogger(__name__)
@@ -43,7 +43,7 @@ class YaAuth(object):
                         "response_type=code"
                     ]
                 )
-            log.info("\nAuth URL: {}".format(auth_url))
+            log.info("\n### Auth URL ###\n{}".format(auth_url))
             return auth_url
         except:
             log.error("Can't get auth URL for{}\n{}".format(
@@ -62,6 +62,7 @@ class YaAuth(object):
 
         if r.status_code == 200:
             log.info("Access token has been gotten successfully")
+            log.debug(r.json()["access_token"])
             return r.json()["access_token"]
         else:
             log.error("Can't get access token for %s\nReason: %s" % (

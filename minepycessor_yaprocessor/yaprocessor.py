@@ -2,10 +2,10 @@ import logging
 import re
 import subprocess
 import traceback
+import time
 
-import logger
-from bus import QueueBus
-from push import YaPush
+from minepycessor_libs import logger
+from minepycessor_libs import YaPush
 
 
 def loop(func):
@@ -21,17 +21,17 @@ def loop(func):
 
 
 class YaProcessor(object):
-    def __init__(self, conf, token, loglevel="DEBUG", filelog=None):
+    def __init__(self, conf, token, timeout=5, loglevel="INFO", logfile=None):
         self.conf = conf
         self.token = token
-        self.timeout = 5
+        self.timeout = timeout
 
         global log
 
         if "log" not in globals():
-            if filelog is not None:
+            if logfile is not None:
                 log = logging.getLogger(__name__)
-                log.addHandler(logger.FileHandler(filelog))
+                log.addHandler(logger.FileHandler(logfile))
                 log.setLevel(getattr(logging, loglevel))
             else:
                 log = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ class YaProcessor(object):
                     "{}^M".format(
                         re.sub(
                             "{{ name }}", nickname,
-                            self.conf["menue"][target]["command"]
+                            self.conf["menu"][target]["command"]
                         )
                     )
                 ]
@@ -72,7 +72,7 @@ class YaProcessor(object):
         push.parse()
         push.verify(self.conf["push_secret"])
         push.get_details(self.token)
-        log.info(push)
+        log.info("###################\n{}\n###################".format(push))
 
         if "message" in push:
             target, nickname = self.parse_message(push["message"])
@@ -82,9 +82,9 @@ class YaProcessor(object):
                     "Comment is empty for {}".format(push["sender"])
                 )
             else:
-                if target in self.conf["menue"]:
+                if target in self.conf["menu"]:
                     if float(push["withdraw_amount"]) == \
-                            float(self.conf["menue"][target]["price"]):
+                            float(self.conf["menu"][target]["price"]):
                         self.perform_command(nickname, target)
                     else:
                         log.warning(
@@ -103,13 +103,7 @@ class YaProcessor(object):
             )
 
     @loop
-    def process(self):
-        qbus = QueueBus(
-            self.conf["mqueue"]["host"],
-            self.conf["mqueue"]["user"],
-            self.conf["mqueue"]["password"]
-        )
-        qbus.connect()
-
+    def process(self, qbus):
         push_str = qbus.get_push(self.conf["mqueue"]["queue"])
-        self.process_msg(push_str)
+        if push_str is not None:
+            self.process_msg(push_str)

@@ -100,5 +100,6 @@ ENV/
 # mypy
 .mypy_cache/
 
+ChangeLog
+AUTHORS
 conf.yml
-test.py

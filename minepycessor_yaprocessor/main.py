@@ -1,10 +1,10 @@
 import argparse
 import logging
-import time
+import yaml
 
-from bus import DBBus
-import logger
-from yaprocessor import YaProcessor
+from minepycessor_libs import DBBus, QueueBus
+from minepycessor_libs import logger
+from minepycessor_yaprocessor import YaProcessor
 
 
 def main():
@@ -40,6 +40,10 @@ def main():
             conf["screen_name"] = args.screen_name
         if args.loglevel is not None:
             conf["loglevel"] = args.loglevel
+        if args.log is not None:
+            conf["logfile"] = args.log
+        if conf["logfile"] == "":
+            conf["logfile"] = None
 
         global log
 
@@ -52,21 +56,40 @@ def main():
             log.addHandler(logger.StreamHandler())
             log.setLevel(getattr(logging, conf["loglevel"]))
 
+        qbus = QueueBus(
+            conf["mqueue"]["host"],
+            conf["mqueue"]["user"],
+            conf["mqueue"]["password"],
+            loglevel=conf["loglevel"],
+            logfile=conf["logfile"]
+        )
+        qbus.connect()
         dbus = DBBus(
-            self.conf["database"]["host"],
-            self.conf["database"]["user"],
-            self.conf["database"]["password"],
-            self.conf["database"]["db"]
+            conf["database"]["host"],
+            conf["database"]["user"],
+            conf["database"]["password"],
+            conf["database"]["db"],
+            loglevel=conf["loglevel"],
+            logfile=conf["logfile"]
         )
         dbus.connect()
 
-        yaproc = YaProcessor(conf, dbus.get_token(conf["database"]["token_name"],
-            conf["database"]["token_table"]))
-        yaproc.process()
+        yaproc = YaProcessor(
+            conf,
+            dbus.get_token(
+                conf["database"]["token_name"],
+                conf["database"]["token_table"]
+            ),
+            timeout=conf["yaprocessor"]["timeout"],
+            loglevel=conf["loglevel"],
+            logfile=conf["logfile"]
+        )
+        yaproc.process(qbus)
 
     except KeyboardInterrupt:
         print('\nThe process was interrupted by the user')
         raise SystemExit
+
 
 if __name__ == "__main__":
     main()

@@ -1,4 +1,4 @@
-from push import Push
-from auth import Auth
+from push import YaPush
+from auth import YaAuth
 from bus import DBBus, QueueBus
 
