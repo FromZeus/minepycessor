@@ -14,6 +14,8 @@ class QueueBus(object):
         self.user = user
         self.password = password
         self.connection = None
+        self.loglevel = loglevel
+        self.logfile = logfile
 
         global log
 
@@ -113,6 +115,8 @@ class DBBus(object):
         self.password = password
         self.db = db
         self.connection = None
+        self.loglevel = loglevel
+        self.logfile = logfile
 
         global log
 

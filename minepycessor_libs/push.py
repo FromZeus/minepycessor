@@ -13,6 +13,8 @@ class YaPush(MutableMapping, object):
         self.message = message
         self._parsed = {}
         self._verified = None
+        self.loglevel = loglevel
+        self.logfile = logfile
 
         global log
 

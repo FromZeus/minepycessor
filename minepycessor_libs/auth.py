@@ -18,6 +18,8 @@ class YaAuth(object):
         self.client_secret = client_secret
         self.push_secret = push_secret
         self.scope = scope
+        self.loglevel = loglevel
+        self.logfile = logfile
 
         global log
 

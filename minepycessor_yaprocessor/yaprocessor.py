@@ -25,6 +25,8 @@ class YaProcessor(object):
         self.conf = conf
         self.token = token
         self.timeout = timeout
+        self.loglevel = loglevel
+        self.logfile = logfile
 
         global log
 
@@ -68,7 +70,7 @@ class YaProcessor(object):
                 target, traceback.format_exc()))
 
     def process_msg(self, message):
-        push = YaPush(message)
+        push = YaPush(message, loglevel=self.loglevel, logfile=self.logfile)
         push.parse()
         push.verify(self.conf["push_secret"])
         push.get_details(self.token)
