@@ -44,8 +44,9 @@ class QueueBus(object):
                 pika.ConnectionParameters(
                     host=self.host,
                     credentials=pika.PlainCredentials(
-                        self.user, self.password)
-                ), heartbeat=0
+                        self.user, self.password),
+                    heartbeat=0
+                )
             )
             log.debug("{}: Connected to {}".format(
                 self.__class__.__name__, self.host))
