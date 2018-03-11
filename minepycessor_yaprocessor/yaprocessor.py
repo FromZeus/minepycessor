@@ -65,6 +65,7 @@ class YaProcessor(object):
                     )
                 ]
             )
+            log.info("Target {} applied to {}".format(target, nickname))
         except:
             log.error("Can't perform command {}\n{}".format(
                 target, traceback.format_exc()))
