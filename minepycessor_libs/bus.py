@@ -8,9 +8,10 @@ import MySQLdb
 
 
 class QueueBus(object):
-    def __init__(self, host, user, password,
+    def __init__(self, host, port, user, password,
                  loglevel="INFO", logfile=None):
         self.host = host
+        self.port = port
         self.user = user
         self.password = password
         self.connection = None
@@ -45,6 +46,7 @@ class QueueBus(object):
             self.connection = pika.BlockingConnection(
                 pika.ConnectionParameters(
                     host=self.host,
+                    port=self.port,
                     credentials=pika.PlainCredentials(
                         self.user, self.password),
                     heartbeat=0
@@ -108,9 +110,10 @@ class QueueBus(object):
 
 
 class DBBus(object):
-    def __init__(self, host, user, password, db,
+    def __init__(self, host, port, user, password, db,
                  loglevel="INFO", logfile=None):
         self.host = host
+        self.port = port
         self.user = user
         self.password = password
         self.db = db
@@ -145,6 +148,7 @@ class DBBus(object):
         try:
             self.connection = MySQLdb.connect(
                 host=self.host,
+                port=self.port,
                 user=self.user,
                 passwd=self.password,
                 db=self.db

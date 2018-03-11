@@ -58,6 +58,7 @@ def main():
 
         qbus = QueueBus(
             conf["mqueue"]["host"],
+            conf["mqueue"]["port"],
             conf["mqueue"]["user"],
             conf["mqueue"]["password"],
             loglevel=conf["loglevel"],
@@ -66,6 +67,7 @@ def main():
         qbus.connect()
         dbus = DBBus(
             conf["database"]["host"],
+            conf["database"]["port"],
             conf["database"]["user"],
             conf["database"]["password"],
             conf["database"]["db"],
