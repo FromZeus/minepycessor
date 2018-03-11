@@ -1,0 +1,5 @@
+pbr>=1.9
+setuptools>=17.1
+pika
+MySQLdb
+requests

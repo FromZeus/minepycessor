@@ -11,15 +11,15 @@ import yaml
 
 from io import BytesIO
 
-from auth import Auth
-from yaprocessor import YaProcessor
+from auth import YaAuth
+from bus import QueueBus, DBBus
 import logger
 
 
 class AuthServer:
-    def __init__(self, auth, yaproc, conf):
+    def __init__(self, auth, qbus, dbus, conf):
         def handler(*args, **kwargs):
-            SimpleHTTPRequestHandler(auth, yaproc, conf, *args, **kwargs)
+            SimpleHTTPRequestHandler(auth, qbus, dbus, conf, *args, **kwargs)
         httpd = HTTPServer((conf["address"], conf["port"]), handler)
         httpd.socket = ssl.wrap_socket(
             httpd.socket,
@@ -31,9 +31,10 @@ class AuthServer:
 
 
 class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
-    def __init__(self, auth, yaproc, conf, *args, **kwargs):
+    def __init__(self, auth, qbus, dbus, conf, *args, **kwargs):
         self.auth = auth
-        self.yaproc = yaproc
+        self.qbus = qbus
+        self.dbus = dbus
         self.conf = conf
         BaseHTTPRequestHandler.__init__(self, *args, **kwargs)
 
@@ -45,8 +46,12 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
             path, tmp = self.path.split("?", 1)
             qs = urlparse.parse_qs(tmp)
             try:
-                self.yaproc[0] = YaProcessor(self.conf,
-                    self.auth.get_token(qs["code"]))
+                token = self.auth.get_token(qs["code"])
+                self.dbus.put_token(
+                    conf["database"]["token_name"],
+                    token,
+                    conf["database"]["token_table"]
+                )
             except:
                 log.error("Can't get access token/n{}".format(
                     traceback.format_exc()))
@@ -63,7 +68,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
         log.debug("Body:\n{}".format(body))
         self.wfile.write(response.getvalue())
         try:
-            self.yaproc[0].process(body)
+            self.qbus.put_push(body, conf["mqueue"]["queue"])
         except:
             log.error("Can't parse push \n{}".format(
                 traceback.format_exc()))
@@ -144,15 +149,29 @@ def main():
             log.addHandler(logger.StreamHandler())
             log.setLevel(getattr(logging, conf["loglevel"]))
 
-        auth = Auth(
-            conf["redirect_url"], conf["client_id"],
-            conf["client_secret"], conf["push_secret"],
+        auth = YaAuth(
+            conf["redirect_url"],
+            conf["client_id"],
+            conf["client_secret"],
+            conf["push_secret"],
             scope=conf["scope"]
         )
         auth.get_auth_url()
+        qbus = QueueBus(
+            conf["mqueue"]["host"],
+            conf["mqueue"]["user"],
+            conf["mqueue"]["password"]
+        )
+        qbus.connect()
+        dbus = DBBus(
+            conf["database"]["host"],
+            conf["database"]["user"],
+            conf["database"]["password"],
+            conf["database"]["db"]
+        )
+        dbus.connect()
 
-        yaproc = [None]
-        httpd = AuthServer(auth, yaproc, conf)
+        httpd = AuthServer(auth, qbus, dbus, conf)
 
     except KeyboardInterrupt:
         print("\nThe process was interrupted by the user")

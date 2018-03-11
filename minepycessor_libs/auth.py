@@ -7,7 +7,7 @@ import logger
 import requests
 
 
-class Auth(object):
+class YaAuth(object):
     def __init__(self, redirect_url, client_id, client_secret,
                  push_secret, scope=["operation-details"],
                  base_url="https://sp-money.yandex.ru/oauth",
