@@ -43,7 +43,10 @@ class YaAuth(object):
                         "response_type=code"
                     ]
                 )
-            log.info("\n### Auth URL ###\n{}\n#############".format(auth_url))
+            log.info(
+                "\n### Auth URL ###\n\n{}\n\n###############".
+                format(auth_url)
+            )
             return auth_url
         except:
             log.error("Can't get auth URL for{}\n{}".format(
