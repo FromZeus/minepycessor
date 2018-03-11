@@ -76,12 +76,14 @@ def main():
         )
         dbus.connect()
 
+        token = dbus.get_token(
+            conf["database"]["token_name"],
+            conf["database"]["token_table"]
+        )
+        log.debug("Got this token from database {}".format(token))
         yaproc = YaProcessor(
             conf,
-            dbus.get_token(
-                conf["database"]["token_name"],
-                conf["database"]["token_table"]
-            ),
+            token,
             timeout=conf["yaprocessor"]["timeout"],
             loglevel=conf["loglevel"],
             logfile=conf["logfile"]

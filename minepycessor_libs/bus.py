@@ -226,7 +226,7 @@ class DBBus(object):
                         WHERE TokenName="{}";
                     '''.format(table, name)
                     c.execute(sql)
-                    res = c.fetchone()
+                    res = c.fetchone()[0]
                     log.debug("{}: Got token {} from {}".format(
                         self.__class__.__name__, name, table))
                 finally:
